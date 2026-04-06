@@ -3,10 +3,11 @@ import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
+import org.json.JSONObject;
 
 public class LoginFrame extends JFrame {
 
-    private JTextField     usernameField;
+    private JTextField     emailField;
     private JPasswordField passwordField;
     private JButton        loginBtn;
     private Timer          glowTimer;
@@ -146,27 +147,79 @@ public class LoginFrame extends JFrame {
         sub.setForeground(Theme.TEXT_SECONDARY);
         sub.setAlignmentX(LEFT_ALIGNMENT);
 
-        usernameField = buildTextField("Username");
+        emailField = buildTextField("Email ID");
         passwordField = buildPasswordField("Password");
 
         JPanel rememberRow = buildRememberRow();
 
         loginBtn = buildLoginButton();
-        loginBtn.addActionListener(e -> openChatRoom());
+        loginBtn.addActionListener(e -> {
+            String email    = emailField.getText().trim();
+            String password = new String(passwordField.getPassword()).trim();
+        
+            if (email.isEmpty() || password.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                    "Please enter email and password",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        
+            // Disable button while calling API
+            loginBtn.setEnabled(false);
+            loginBtn.setText("Signing in...");
+        
+            // Run in background so UI doesn't freeze
+            new Thread(() -> {
+                try {
+                    JSONObject response = ApiService.login(email, password);
+        
+                    // Store token + user info
+                    SessionManager.getInstance().saveSession(
+                        response.getString("token"),
+                        response.getLong("userId"),
+                        response.getString("name")
+                    );
+        
+                    // Open chat window on UI thread
+                    SwingUtilities.invokeLater(() -> {
+                        openChatRoom();  // use this instead
+                        dispose();
 
-        JLabel signup = new JLabel("<html><center><font color='#555676'>Don't have an account? </font>"
-                + "<font color='#9D98FF'><u>Sign up</u></font></center></html>");
-        signup.setFont(Theme.font(Font.PLAIN, 12));
-        signup.setAlignmentX(LEFT_ALIGNMENT);
-        signup.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                    });
+        
+                } catch (Exception ex) {
+                    SwingUtilities.invokeLater(() -> {
+                        JOptionPane.showMessageDialog(null,
+                            ex.getMessage(),
+                            "Login Failed", JOptionPane.ERROR_MESSAGE);
+                        loginBtn.setEnabled(true);
+                        loginBtn.setText("Sign In");
+                    });
+                }
+            }).start();
+        });
+
+        JLabel signUpLabel = new JLabel("<html><center><font color='#555676'>Don't have an account? </font>"
+        + "<font color='#9D98FF'><u>Sign up</u></font></center></html>");
+        signUpLabel.setFont(Theme.font(Font.PLAIN, 12));
+        signUpLabel.setAlignmentX(LEFT_ALIGNMENT);
+        signUpLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        signUpLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                SignUpFrame signUp = new SignUpFrame(LoginFrame.this);
+                signUp.setVisible(true);
+            }
+        });
 
         p.add(welcome);
         p.add(Box.createVerticalStrut(4));
         p.add(sub);
         p.add(Box.createVerticalStrut(36));
-        p.add(fieldLabel("Username"));
+        p.add(fieldLabel("Email ID"));
         p.add(Box.createVerticalStrut(6));
-        p.add(usernameField);
+        p.add(emailField);
         p.add(Box.createVerticalStrut(18));
         p.add(fieldLabel("Password"));
         p.add(Box.createVerticalStrut(6));
@@ -176,16 +229,7 @@ public class LoginFrame extends JFrame {
         p.add(Box.createVerticalStrut(28));
         p.add(loginBtn);
         p.add(Box.createVerticalStrut(16));
-        p.add(signup);
-
-        // Enter key triggers login
-        KeyAdapter enter = new KeyAdapter() {
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) openChatRoom();
-            }
-        };
-        usernameField.addKeyListener(enter);
-        passwordField.addKeyListener(enter);
+        p.add(signUpLabel);
 
         return p;
     }
@@ -326,7 +370,7 @@ public class LoginFrame extends JFrame {
     }
 
     private void openChatRoom() {
-        String name = usernameField.getText().isBlank() ? "You" : usernameField.getText().trim();
+        String name = emailField.getText().isBlank() ? "You" : emailField.getText().trim();
         glowTimer.stop();
         dispose();
         SwingUtilities.invokeLater(() -> {
