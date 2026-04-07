@@ -1,2 +1,19 @@
-src/main/resources/application.properties
-application.properties
+# Sensitive config
+backend/chatroom-server/src/main/resources/application.properties
+
+# Compiled files
+*.class
+target/
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/

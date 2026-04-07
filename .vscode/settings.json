@@ -1,0 +1,12 @@
+{
+    "java.project.sourcePaths": [
+        "frontend"
+    ],
+    "java.project.referencedLibraries": [
+        "frontend/lib/slf4j-api-2.0.9.jar",
+        "frontend/lib/slf4j-simple-2.0.9.jar",
+        "/Users/apple/Desktop/java project/frontend/lib/json-20240303.jar",
+        "/Users/apple/Desktop/java project/frontend/lib/Java-WebSocket-1.5.4.jar"
+    ],
+    "java.configuration.updateBuildConfiguration": "interactive"
+}
