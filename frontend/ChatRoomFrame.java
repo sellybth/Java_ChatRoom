@@ -145,12 +145,8 @@ public class ChatRoomFrame extends JFrame {
     }
 
     private void appendBubble(String sender, String content, String time, boolean mine) {
-        // Remove glue before adding
-        int count = chatArea.getComponentCount();
-        if (count > 0) chatArea.remove(count - 1);
         chatArea.add(buildMessageBubble(sender, content, time, mine));
-        chatArea.add(Box.createVerticalStrut(4));
-        chatArea.add(Box.createVerticalGlue());
+        chatArea.add(Box.createVerticalStrut(8)); // spacing between messages
         chatArea.revalidate();
         chatArea.repaint();
         scrollToBottom();
@@ -182,10 +178,6 @@ public class ChatRoomFrame extends JFrame {
             System.exit(0);
         }));
         winBtns.add(winButton(new Color(0xFF, 0xBD, 0x2E), "–", e -> setState(ICONIFIED)));
-        winBtns.add(winButton(new Color(0x28, 0xCA, 0x41), "⬜", e -> {
-            if ((getExtendedState() & MAXIMIZED_BOTH) != 0) setExtendedState(NORMAL);
-            else setExtendedState(MAXIMIZED_BOTH);
-        }));
 
         bar.add(title, BorderLayout.WEST);
         bar.add(winBtns, BorderLayout.EAST);
@@ -283,8 +275,6 @@ public class ChatRoomFrame extends JFrame {
         });
         rail.add(logoutIcon);
         rail.add(Box.createVerticalStrut(4));
-        rail.add(navIcon("⚙️", "Settings", false));
-        rail.add(Box.createVerticalStrut(8));
 
         return rail;
     }
@@ -912,17 +902,7 @@ private String resolveDisplayName(String rawName, String type) {
         nameBox.add(chatHeaderStatus);
         left.add(nameBox, BorderLayout.CENTER);
 
-        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
-        actions.setOpaque(false);
-        for (String icon : new String[]{"📞", "📹", "🔍", "⋯"}) {
-            JLabel btn = new JLabel(icon);
-            btn.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 16));
-            btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            actions.add(btn);
-        }
-
         header.add(left,    BorderLayout.WEST);
-        header.add(actions, BorderLayout.EAST);
         return header;
     }
 
@@ -937,15 +917,6 @@ private String resolveDisplayName(String rawName, String type) {
         };
         bar.setOpaque(false);
         bar.setBorder(new EmptyBorder(12, 16, 12, 16));
-
-        JPanel leftBtns = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-        leftBtns.setOpaque(false);
-        for (String icon : new String[]{"📎", "😊"}) {
-            JLabel btn = new JLabel(icon);
-            btn.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 18));
-            btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            leftBtns.add(btn);
-        }
 
         inputField = new JTextField() {
             @Override protected void paintComponent(Graphics g) {
@@ -965,7 +936,7 @@ private String resolveDisplayName(String rawName, String type) {
         inputField.setBorder(new EmptyBorder(10, 16, 10, 16));
         inputField.setEnabled(false); // disabled until a chat is selected
 
-        sendBtn = new JButton("➤") {
+        sendBtn = new JButton("->") {
             boolean hov = false;
             { addMouseListener(new MouseAdapter() {
                 public void mouseEntered(MouseEvent e) { hov = true;  repaint(); }
@@ -997,7 +968,6 @@ private String resolveDisplayName(String rawName, String type) {
             }
         });
 
-        bar.add(leftBtns,  BorderLayout.WEST);
         bar.add(inputField, BorderLayout.CENTER);
         bar.add(sendBtn,   BorderLayout.EAST);
         return bar;
@@ -1031,7 +1001,7 @@ private String resolveDisplayName(String rawName, String type) {
         JPanel wrapper = new JPanel();
         wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.X_AXIS));
         wrapper.setOpaque(false);
-        wrapper.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+        wrapper.setMaximumSize(new Dimension(Integer.MAX_VALUE, wrapper.getPreferredSize().height));
 
         if (mine) wrapper.add(Box.createHorizontalGlue());
 
@@ -1039,7 +1009,6 @@ private String resolveDisplayName(String rawName, String type) {
             JPanel av = buildAvatarIcon(
                 sender.substring(0, Math.min(2, sender.length())).toUpperCase(),
                 avatarColor(sender), 28);
-            av.setAlignmentY(TOP_ALIGNMENT);
             wrapper.add(av);
             wrapper.add(Box.createHorizontalStrut(8));
         }

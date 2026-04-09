@@ -150,8 +150,6 @@ public class LoginFrame extends JFrame {
         emailField = buildTextField("Email ID");
         passwordField = buildPasswordField("Password");
 
-        JPanel rememberRow = buildRememberRow();
-
         loginBtn = buildLoginButton();
         loginBtn.addActionListener(e -> {
             String email    = emailField.getText().trim();
@@ -182,7 +180,7 @@ public class LoginFrame extends JFrame {
         
                     // Open chat window on UI thread
                     SwingUtilities.invokeLater(() -> {
-                        openChatRoom();  // use this instead
+                        openChatRoom();  
                         dispose();
 
                     });
@@ -224,8 +222,6 @@ public class LoginFrame extends JFrame {
         p.add(fieldLabel("Password"));
         p.add(Box.createVerticalStrut(6));
         p.add(passwordField);
-        p.add(Box.createVerticalStrut(12));
-        p.add(rememberRow);
         p.add(Box.createVerticalStrut(28));
         p.add(loginBtn);
         p.add(Box.createVerticalStrut(16));
@@ -313,25 +309,6 @@ public class LoginFrame extends JFrame {
         return f;
     }
 
-    private JPanel buildRememberRow() {
-        JPanel row = new JPanel(new BorderLayout());
-        row.setOpaque(false);
-        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
-        row.setAlignmentX(LEFT_ALIGNMENT);
-
-        JCheckBox remember = new JCheckBox("Remember me");
-        remember.setOpaque(false);
-        remember.setForeground(Theme.TEXT_SECONDARY);
-        remember.setFont(Theme.font(Font.PLAIN, 12));
-
-        JLabel forgot = new JLabel("<html><font color='#9D98FF'><u>Forgot password?</u></font></html>");
-        forgot.setFont(Theme.font(Font.PLAIN, 12));
-        forgot.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-
-        row.add(remember, BorderLayout.WEST);
-        row.add(forgot, BorderLayout.EAST);
-        return row;
-    }
 
     private JButton buildLoginButton() {
         JButton btn = new JButton("Sign In") {

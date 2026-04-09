@@ -137,19 +137,44 @@ public class SignUpFrame extends JDialog {
 
     // Handle sign up button click
     private void handleSignUp() {
-        String name     = nameField.getText().trim();
-        String email    = emailField.getText().trim();
-        String password = new String(passwordField.getPassword()).trim();
-        String phone    = phoneField.getText().trim();
+        String name = nameField.getText().trim();
+String email = emailField.getText().trim();
+String password = new String(passwordField.getPassword()).trim();
+String phone = phoneField.getText().trim();
 
-        // Basic validation
-        if (name.isEmpty() || email.isEmpty() ||
-            password.isEmpty() || phone.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                "Please fill in all fields",
-                "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
+// Regex patterns
+String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
+String passwordRegex = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$"; 
+String phoneRegex = "^[0-9]{10}$";
+
+// Validation
+if (name.isEmpty() || email.isEmpty() || password.isEmpty() || phone.isEmpty()) {
+    JOptionPane.showMessageDialog(this,
+        "Please fill in all fields",
+        "Error", JOptionPane.ERROR_MESSAGE);
+    return;
+}
+
+if (!email.matches(emailRegex)) {
+    JOptionPane.showMessageDialog(this,
+        "Invalid email format",
+        "Error", JOptionPane.ERROR_MESSAGE);
+    return;
+}
+
+if (!password.matches(passwordRegex)) {
+    JOptionPane.showMessageDialog(this,
+        "Password must be at least 8 characters and contain letters and numbers",
+        "Error", JOptionPane.ERROR_MESSAGE);
+    return;
+}
+
+if (!phone.matches(phoneRegex)) {
+    JOptionPane.showMessageDialog(this,
+        "Phone number must be exactly 10 digits",
+        "Error", JOptionPane.ERROR_MESSAGE);
+    return;
+}
 
         // Disable button while calling API
         signUpBtn.setEnabled(false);
