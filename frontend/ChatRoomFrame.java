@@ -55,6 +55,12 @@ public class ChatRoomFrame extends JFrame {
 
         setContentPane(root);
 
+        // Connect WebSocket once at startup
+String token = SessionManager.getInstance().getToken();
+WebSocketService.getInstance().connect(token, null, rawJson ->
+    SwingUtilities.invokeLater(() -> handleIncomingMessage(rawJson))
+);
+
         // Load groups into sidebar
         loadGroups();
     }
@@ -441,11 +447,7 @@ public class ChatRoomFrame extends JFrame {
                         inputField.setEnabled(true);
                         sendBtn.setEnabled(true);
 
-                        //connect/resubscribe to this group's topic
-                        String token = SessionManager.getInstance().getToken();
-    WebSocketService.getInstance().connect(token, groupId, rawJson ->
-        SwingUtilities.invokeLater(() -> handleIncomingMessage(rawJson))
-    );
+                        WebSocketService.getInstance().resubscribe(groupId);
                     }
                 });
             }

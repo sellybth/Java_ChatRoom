@@ -60,7 +60,9 @@ public class WebSocketService {
                     if (frame.startsWith("CONNECTED")) {
                         // 2. After CONNECTED, subscribe to the group topic
                         System.out.println("[WS] STOMP connected — subscribing to group " + groupId);
-                        send(stompSubscribe("/topic/group/" + groupId, "sub-0"));
+                        if (groupId != null) {
+                            send(stompSubscribe("/topic/group/" + groupId, "sub-0"));
+                        }
 
                     } else if (frame.startsWith("MESSAGE")) {
                         // 3. Incoming message — extract body (after blank line)
@@ -130,6 +132,15 @@ public class WebSocketService {
             System.out.println("[WS] Reconnecting...");
             doConnect(savedToken, subscribedGroupId);
         }, 3, TimeUnit.SECONDS);
+    }
+
+    private int subCounter = 0; // unique sub id each time
+
+    public void resubscribe(Long groupId) {
+        this.subscribedGroupId = groupId;
+        if (wsClient == null || !wsClient.isOpen()) return;
+        subCounter++;
+        wsClient.send(stompSubscribe("/topic/group/" + groupId, "sub-" + subCounter));
     }
 
     // ── STOMP frame builders ──────────────────────────────────────────────────
