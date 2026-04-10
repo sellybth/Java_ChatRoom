@@ -104,7 +104,7 @@ WebSocketService.getInstance().connect(token, null, rawJson ->
                     
                         sidebarList.add(buildGroupCell(
                             g.getLong("groupId"),
-                            displayName,   // ✅ use resolved name
+                            displayName,   //  use resolved name
                             g.getString("type")
                         ));
                     }
@@ -156,6 +156,9 @@ WebSocketService.getInstance().connect(token, null, rawJson ->
         chatArea.revalidate();
         chatArea.repaint();
         scrollToBottom();
+        // Force the parent container to repaint too
+    chatArea.getParent().revalidate();
+    chatArea.getParent().repaint();
     }
 
     // ── Title bar ─────────────────────────────────────────────────────────────

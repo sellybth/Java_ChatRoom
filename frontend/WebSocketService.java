@@ -68,7 +68,7 @@ public class WebSocketService {
                         // 3. Incoming message — extract body (after blank line)
                         String body = extractStompBody(frame);
                         if (messageHandler != null && body != null) {
-                            messageHandler.accept(body);
+                            javax.swing.SwingUtilities.invokeLater(() -> messageHandler.accept(body));
                         }
 
                     } else if (frame.startsWith("ERROR")) {
