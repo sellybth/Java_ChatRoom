@@ -110,7 +110,7 @@ public class LoginFrame extends JFrame {
         layer.add(formPanel, JLayeredPane.DEFAULT_LAYER);
 
         // Close button
-        JButton closeBtn = new JButton("✕");
+        JButton closeBtn = new JButton("X");
         closeBtn.setForeground(Theme.TEXT_MUTED);
         closeBtn.setBackground(new Color(0, 0, 0, 0));
         closeBtn.setBorder(BorderFactory.createEmptyBorder());

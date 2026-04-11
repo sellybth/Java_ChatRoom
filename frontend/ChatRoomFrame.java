@@ -80,7 +80,7 @@ WebSocketService.getInstance().connect(token, null, rawJson ->
                 String sender  = msg.optString("senderName", "?");
                 String content = msg.optString("content", "");
                 String time    = msg.optString("timestamp", "Now");
-                appendBubble(sender, content, time, false);
+                appendBubble(sender, content, time, false, -1);
             }
         } catch (Exception e) {
             System.err.println("[WS] Bad message: " + e.getMessage());
@@ -133,10 +133,11 @@ WebSocketService.getInstance().connect(token, null, rawJson ->
                         String sender  = m.optString("senderName", "?");
                         String content = m.optString("content", "");
                         long senderId  = m.optLong("userId", -1);
+                        long msgId     = m.optLong("msgId", -1); 
                         String ts      = m.optString("timestamp", "");
                         String time = ts.isEmpty() ? "" : ts.substring(0, 16).replace("T", " ");
                         boolean mine   = senderId == currentUserId;
-                        chatArea.add(buildMessageBubble(sender, content, time, mine));
+                        chatArea.add(buildMessageBubble(sender, content, time, mine, msgId));
                         chatArea.add(Box.createVerticalStrut(4));
                     }
                     chatArea.add(Box.createVerticalGlue());
@@ -150,8 +151,8 @@ WebSocketService.getInstance().connect(token, null, rawJson ->
         }).start();
     }
 
-    private void appendBubble(String sender, String content, String time, boolean mine) {
-        chatArea.add(buildMessageBubble(sender, content, time, mine));
+    private void appendBubble(String sender, String content, String time, boolean mine, long msgId) {
+        chatArea.add(buildMessageBubble(sender, content, time, mine, msgId));
         chatArea.add(Box.createVerticalStrut(8)); // spacing between messages
         chatArea.revalidate();
         chatArea.repaint();
@@ -176,7 +177,7 @@ WebSocketService.getInstance().connect(token, null, rawJson ->
         bar.setPreferredSize(new Dimension(0, 36));
         bar.setBorder(new EmptyBorder(0, 16, 0, 8));
 
-        JLabel title = new JLabel("💬  ChatRoom");
+        JLabel title = new JLabel(" Blabber ChatRoom");
         title.setFont(Theme.font(Font.BOLD, 13));
         title.setForeground(Theme.TEXT_SECONDARY);
 
@@ -237,6 +238,45 @@ WebSocketService.getInstance().connect(token, null, rawJson ->
         return b;
     }
 
+    private JPanel navTextItem(String text) {
+        JPanel p = new JPanel() {
+            @Override protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                super.paintComponent(g);
+                g2.dispose();
+            }
+        };
+    
+        p.setOpaque(false);
+        p.setLayout(new GridBagLayout()); 
+        p.setMaximumSize(new Dimension(64, 44));
+        p.setPreferredSize(new Dimension(64, 44));
+        p.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+    
+        JLabel lbl = new JLabel(text);
+        lbl.setForeground(Color.WHITE);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 12)); // slightly smaller to fit
+        lbl.setHorizontalAlignment(SwingConstants.CENTER);
+    
+        p.add(lbl);
+    
+        // hover effect
+        p.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) {
+                p.setBackground(Theme.BG_HOVER);
+                p.setOpaque(true);
+                p.repaint();
+            }
+            public void mouseExited(MouseEvent e) {
+                p.setOpaque(false);
+                p.repaint();
+            }
+        });
+    
+        return p;
+    }
+
     // ── Nav rail ──────────────────────────────────────────────────────────────
     private JPanel buildNavRail() {
         JPanel rail = new JPanel() {
@@ -258,16 +298,12 @@ WebSocketService.getInstance().connect(token, null, rawJson ->
         rail.add(avatar);
         rail.add(Box.createVerticalStrut(20));
 
-        String[][] icons = {{"💬","Chats"}};
-        for (int i = 0; i < icons.length; i++) {
-            rail.add(navIcon(icons[i][0], icons[i][1], i == 0));
-            rail.add(Box.createVerticalStrut(4));
-        }
 
         rail.add(Box.createVerticalGlue());
 
+
         // Logout button
-        JPanel logoutIcon = navIcon("🚪", "Logout", false);
+        JPanel logoutIcon = navTextItem("Logout");
         logoutIcon.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 int confirm = JOptionPane.showConfirmDialog(
@@ -286,37 +322,6 @@ WebSocketService.getInstance().connect(token, null, rawJson ->
         rail.add(Box.createVerticalStrut(4));
 
         return rail;
-    }
-
-    private JPanel navIcon(String emoji, String tooltip, boolean active) {
-        JPanel p = new JPanel() {
-            @Override protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                if (active) {
-                    g2.setColor(Theme.ACCENT_DIM);
-                    g2.fillRoundRect(8, 0, getWidth() - 16, getHeight(), 12, 12);
-                    g2.setColor(Theme.ACCENT);
-                    g2.fillRoundRect(0, getHeight() / 2 - 12, 3, 24, 3, 3);
-                }
-                super.paintComponent(g);
-                g2.dispose();
-            }
-        };
-        p.setOpaque(false);
-        p.setLayout(new GridBagLayout());
-        p.setMaximumSize(new Dimension(64, 44));
-        p.setPreferredSize(new Dimension(64, 44));
-        p.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        p.setToolTipText(tooltip);
-        JLabel lbl = new JLabel(emoji);
-        lbl.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 18));
-        p.add(lbl);
-        p.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) { p.setBackground(Theme.BG_HOVER); p.setOpaque(true);  p.repaint(); }
-            public void mouseExited(MouseEvent e)  { p.setOpaque(false); p.repaint(); }
-        });
-        return p;
     }
 
     // ── Sidebar ───────────────────────────────────────────────────────────────
@@ -391,7 +396,7 @@ WebSocketService.getInstance().connect(token, null, rawJson ->
         wrap.add(search, BorderLayout.CENTER);
 
         // New chat / group button
-        JButton newBtn = new JButton("+") {
+        JButton newBtn = new JButton("NEW") {
             @Override protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -403,7 +408,7 @@ WebSocketService.getInstance().connect(token, null, rawJson ->
         };
         newBtn.setForeground(Color.WHITE);
         newBtn.setFont(Theme.font(Font.BOLD, 16));
-        newBtn.setPreferredSize(new Dimension(32, 32));
+        newBtn.setPreferredSize(new Dimension(85, 32));
         newBtn.setOpaque(false);
         newBtn.setContentAreaFilled(false);
         newBtn.setBorderPainted(false);
@@ -459,6 +464,56 @@ WebSocketService.getInstance().connect(token, null, rawJson ->
 
                         WebSocketService.getInstance().resubscribe(groupId);
                     }
+                    // ADD this — right-click shows delete option
+public void mousePressed(MouseEvent e) {
+    if (SwingUtilities.isRightMouseButton(e)) {
+        JPopupMenu popup = new JPopupMenu();
+        popup.setBackground(Theme.BG_SIDEBAR);
+
+        JMenuItem deleteItem = new JMenuItem("🗑 Delete Conversation");
+        deleteItem.setFont(Theme.font(Font.PLAIN, 13));
+        deleteItem.setForeground(new Color(0xFF, 0x6B, 0x6B)); // red
+        deleteItem.setBackground(Theme.BG_SIDEBAR);
+        deleteItem.setOpaque(true);
+        deleteItem.addActionListener(ev -> {
+            int confirm = JOptionPane.showConfirmDialog(
+                ChatRoomFrame.this,
+                "Delete \"" + name + "\"? This will remove all messages.",
+                "Delete Conversation",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+            );
+            if (confirm == JOptionPane.YES_OPTION) {
+                new Thread(() -> {
+                    try {
+                        ApiService.deleteGroup(groupId);
+                        SwingUtilities.invokeLater(() -> {
+                            // If active chat is the one being deleted, clear it
+                            if (activeGroupId == groupId) {
+                                activeGroupId   = -1;
+                                activeGroupName = null;
+                                activeGroupType = null;
+                                chatArea.removeAll();
+                                chatHeaderName.setText("Select a conversation");
+                                chatHeaderStatus.setText("");
+                                inputField.setEnabled(false);
+                                sendBtn.setEnabled(false);
+                                chatArea.revalidate();
+                                chatArea.repaint();
+                            }
+                            loadGroups(); // refresh sidebar
+                        });
+                    } catch (Exception ex) {
+                        showError("Could not delete: " + ex.getMessage());
+                    }
+                }).start();
+            }
+        });
+
+        popup.add(deleteItem);
+        popup.show(e.getComponent(), e.getX(), e.getY());
+    }
+}
                 });
             }
             @Override protected void paintComponent(Graphics g) {
@@ -518,7 +573,7 @@ private void showNewChatDialog() {
     JLabel title = new JLabel("New Conversation");
     title.setFont(Theme.font(Font.BOLD, 16));
     title.setForeground(Theme.TEXT_PRIMARY);
-    JButton closeBtn = new JButton("✕");
+    JButton closeBtn = new JButton("X");
     closeBtn.setForeground(Theme.TEXT_MUTED);
     closeBtn.setBackground(new Color(0, 0, 0, 0));
     closeBtn.setBorder(BorderFactory.createEmptyBorder());
@@ -534,8 +589,8 @@ private void showNewChatDialog() {
     typeRow.setOpaque(false);
     typeRow.setBorder(new EmptyBorder(0, 20, 0, 20));
 
-    JToggleButton dmBtn  = styledToggle("💬 Direct (1 person)", true);
-    JToggleButton grpBtn = styledToggle("👥 Group (multiple)",  false);
+    JToggleButton dmBtn  = styledToggle(" Direct (1 person)", true);
+    JToggleButton grpBtn = styledToggle(" Group (multiple)",  false);
     ButtonGroup bg = new ButtonGroup();
     bg.add(dmBtn); bg.add(grpBtn);
     typeRow.add(dmBtn);
@@ -776,8 +831,8 @@ private void showNewChatDialog() {
             @Override protected void paintBorder(Graphics g) {}
         };
         f.setOpaque(false);
-        f.setForeground(Theme.TEXT_PRIMARY);
-        f.setCaretColor(Theme.ACCENT_LIGHT);
+        f.setForeground(Theme.TEXT_ACCENT);
+        f.setCaretColor(Theme.ACCENT_GLOW);
         f.setFont(Theme.font(Font.PLAIN, 13));
         f.setBorder(new EmptyBorder(8, 12, 8, 12));
         f.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
@@ -951,7 +1006,7 @@ private String resolveDisplayName(String rawName, String type) {
         inputField.setBorder(new EmptyBorder(10, 16, 10, 16));
         inputField.setEnabled(false); // disabled until a chat is selected
 
-        sendBtn = new JButton("->") {
+        sendBtn = new JButton("SEND") {
             boolean hov = false;
             { addMouseListener(new MouseAdapter() {
                 public void mouseEntered(MouseEvent e) { hov = true;  repaint(); }
@@ -968,7 +1023,7 @@ private String resolveDisplayName(String rawName, String type) {
         };
         sendBtn.setFont(Theme.font(Font.BOLD, 14));
         sendBtn.setForeground(Color.WHITE);
-        sendBtn.setPreferredSize(new Dimension(44, 44));
+        sendBtn.setPreferredSize(new Dimension(100, 44));
         sendBtn.setOpaque(false);
         sendBtn.setContentAreaFilled(false);
         sendBtn.setBorderPainted(false);
@@ -998,7 +1053,7 @@ private String resolveDisplayName(String rawName, String type) {
     
         // Show optimistically in UI immediately
         String time = TIME_FMT.format(Instant.now());
-        appendBubble(currentUser, text, time, true);
+        appendBubble(currentUser, text, time, true, -1);
     
         new Thread(() -> {
             try {
@@ -1012,13 +1067,13 @@ private String resolveDisplayName(String rawName, String type) {
     }
 
     // ── Message bubble ────────────────────────────────────────────────────────
-    private JPanel buildMessageBubble(String sender, String content, String time, boolean mine) {
+    private JPanel buildMessageBubble(String sender, String content, String time, boolean mine, long msgId) {
         JPanel wrapper = new JPanel();
         wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.X_AXIS));
         wrapper.setOpaque(false);
         wrapper.setMaximumSize(new Dimension(Integer.MAX_VALUE, wrapper.getPreferredSize().height));
 
-        if (mine) wrapper.add(Box.createHorizontalGlue());
+        if (mine) wrapper.add(Box.createHorizontalGlue());  
 
         if (!mine) {
             JPanel av = buildAvatarIcon(
@@ -1063,6 +1118,55 @@ private String resolveDisplayName(String rawName, String type) {
         bubble.add(textLbl);
         bubble.add(Box.createVerticalStrut(4));
         bubble.add(timeLbl);
+
+        // Double-click on bubble to delete (only for own messages)
+if (mine && msgId != -1) {
+    bubble.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+    bubble.addMouseListener(new MouseAdapter() {
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            if (e.getClickCount() == 2) {
+                int confirm = JOptionPane.showConfirmDialog(
+                    ChatRoomFrame.this,
+                    "Delete this message?",
+                    "Delete Message",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE
+                );
+                if (confirm == JOptionPane.YES_OPTION) {
+                    new Thread(() -> {
+                        try {
+                            ApiService.deleteMessage(msgId);
+                            SwingUtilities.invokeLater(() -> {
+                                // Remove bubble + its spacing strut from chatArea
+                                Container parent = wrapper.getParent();
+                                if (parent != null) {
+                                    int idx = -1;
+                                    for (int i = 0; i < parent.getComponentCount(); i++) {
+                                        if (parent.getComponent(i) == wrapper) {
+                                            idx = i;
+                                            break;
+                                        }
+                                    }
+                                    parent.remove(wrapper);
+                                    // Remove the vertical strut that follows
+                                    if (idx != -1 && idx < parent.getComponentCount()) {
+                                        parent.remove(idx);
+                                    }
+                                    parent.revalidate();
+                                    parent.repaint();
+                                }
+                            });
+                        } catch (Exception ex) {
+                            showError("Could not delete message: " + ex.getMessage());
+                        }
+                    }).start();
+                }
+            }
+        }
+    });
+}
+
         bubble.setMaximumSize(new Dimension(500, Integer.MAX_VALUE));
 
         wrapper.add(bubble);

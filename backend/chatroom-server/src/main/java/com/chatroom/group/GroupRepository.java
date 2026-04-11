@@ -49,6 +49,21 @@ public class GroupRepository {
         );
     }
 
+    // DELETE all members of a group first (FK constraint)
+public void deleteMembersByGroupId(Long groupId) {
+    jdbcTemplate.update(
+        "DELETE FROM members WHERE group_id = ?",
+        groupId
+    );
+}
+
+// DELETE all messages in a group, then the group itself
+public void deleteGroup(Long groupId) {
+    jdbcTemplate.update("DELETE FROM messages WHERE group_id = ?", groupId);
+    jdbcTemplate.update("DELETE FROM members  WHERE group_id = ?", groupId);
+    jdbcTemplate.update("DELETE FROM groups   WHERE group_id = ?", groupId);
+}
+
     // SELECT all groups a specific user belongs to
     // Used to show the user's chat list
     public List<Group> findGroupsByUserId(Long userId) {

@@ -140,4 +140,28 @@ public class GroupController {
 
         return ResponseEntity.ok(Map.of("message", "Member added successfully"));
     }
+
+// DELETE /api/groups/{groupId}
+// Any member can delete a DM; only admin can delete a group
+@DeleteMapping("/{groupId}")
+public ResponseEntity<?> deleteGroup(@PathVariable Long groupId,
+                                     Authentication authentication) {
+    Long userId = (Long) authentication.getPrincipal();
+
+    // Check group exists
+    Group group = groupRepository.findById(groupId).orElse(null);
+    if (group == null) {
+        return ResponseEntity.status(404).body(Map.of("error", "Group not found"));
+    }
+
+    // User must be a member
+    if (!groupRepository.isMember(groupId, userId)) {
+        return ResponseEntity.status(403).body(Map.of("error", "Not a member of this group"));
+    }
+
+    // Delete everything: messages → members → group
+    groupRepository.deleteGroup(groupId);
+    return ResponseEntity.ok(Map.of("message", "Conversation deleted"));
+}
+
 }

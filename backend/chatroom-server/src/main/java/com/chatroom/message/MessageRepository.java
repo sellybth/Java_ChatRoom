@@ -36,6 +36,15 @@ public class MessageRepository {
         );
     }
 
+    // DELETE a single message by its ID
+// Only used when the owner deletes their own message
+public void deleteById(Long msgId) {
+    jdbcTemplate.update(
+        "DELETE FROM messages WHERE msg_id = ?",
+        msgId
+    );
+}
+
     // SELECT all messages in a group
     // JOINs with users table to get sender name
     // Ordered oldest to newest
@@ -68,4 +77,13 @@ public class MessageRepository {
             groupId
         );
     }
+    public Message findById(Long msgId) {
+    List<Message> result = jdbcTemplate.query(
+        "SELECT m.*, u.name as sender_name FROM messages m " +
+        "JOIN users u ON m.user_id = u.user_id " +
+        "WHERE m.msg_id = ?",
+        messageRowMapper, msgId
+    );
+    return result.isEmpty() ? null : result.get(0);
+}
 }

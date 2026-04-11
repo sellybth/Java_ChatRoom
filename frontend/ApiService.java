@@ -176,4 +176,26 @@ public class ApiService {
 
         return new JSONArray(response.body());
     }
+
+    // Delete a single message
+public static void deleteMessage(long msgId) throws Exception {
+    HttpRequest request = HttpRequest.newBuilder()
+        .uri(URI.create(BASE_URL + "/api/messages/" + msgId))
+        .header("Authorization", "Bearer " + SessionManager.getInstance().getToken())
+        .DELETE()
+        .build();
+    HttpResponse<String> resp = client.send(request, HttpResponse.BodyHandlers.ofString());
+    if (resp.statusCode() != 200) throw new Exception(new JSONObject(resp.body()).optString("error"));
+}
+
+// Delete a group/DM
+public static void deleteGroup(long groupId) throws Exception {
+    HttpRequest request = HttpRequest.newBuilder()
+        .uri(URI.create(BASE_URL + "/api/groups/" + groupId))
+        .header("Authorization", "Bearer " + SessionManager.getInstance().getToken())
+        .DELETE()
+        .build();
+    HttpResponse<String> resp = client.send(request, HttpResponse.BodyHandlers.ofString());
+    if (resp.statusCode() != 200) throw new Exception(new JSONObject(resp.body()).optString("error"));
+}
 }

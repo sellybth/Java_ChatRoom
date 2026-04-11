@@ -1,9 +1,6 @@
 package com.chatroom.message;
 
 import com.chatroom.group.GroupRepository;
-import com.chatroom.user.UserRepository;
-import com.chatroom.user.User;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.*;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -21,15 +18,13 @@ public class MessageController {
     private final MessageRepository messageRepository;
     private final GroupRepository groupRepository;
     private final SimpMessagingTemplate messagingTemplate;
-    private final UserRepository userRepository;
 
     public MessageController(MessageRepository messageRepository,
                              GroupRepository groupRepository,
-                             SimpMessagingTemplate messagingTemplate, UserRepository userRepository) {
+                             SimpMessagingTemplate messagingTemplate) {
         this.messageRepository = messageRepository;
         this.groupRepository = groupRepository;
         this.messagingTemplate = messagingTemplate;
-        this.userRepository = userRepository;
     }
 
     // GET /api/messages/{groupId}
@@ -76,4 +71,26 @@ public class MessageController {
             message
         );
     }
+
+    // DELETE /api/messages/{msgId}
+// Only the sender of the message can delete it
+@DeleteMapping("/{msgId}")
+public ResponseEntity<?> deleteMessage(@PathVariable Long msgId,
+                                       Authentication authentication) {
+    Long userId = (Long) authentication.getPrincipal();
+
+    // Fetch the message to verify ownership
+    Message message = messageRepository.findById(msgId);
+    if (message == null) {
+        return ResponseEntity.status(404).body(Map.of("error", "Message not found"));
+    }
+
+    // Only the sender can delete their own message
+    if (!message.getUserId().equals(userId)) {
+        return ResponseEntity.status(403).body(Map.of("error", "You can only delete your own messages"));
+    }
+
+    messageRepository.deleteById(msgId);
+    return ResponseEntity.ok(Map.of("message", "Message deleted"));
+}
 }
