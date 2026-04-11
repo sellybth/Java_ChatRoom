@@ -60,8 +60,9 @@ public class WebSocketService {
                     if (frame.startsWith("CONNECTED")) {
                         // 2. After CONNECTED, subscribe to the group topic
                         System.out.println("[WS] STOMP connected — subscribing to group " + groupId);
-                        if (groupId != null) {
-                            send(stompSubscribe("/topic/group/" + groupId, "sub-0"));
+                        if (subscribedGroupId != null) {
+                            lastSubId = "sub-0";
+                            send(stompSubscribe("/topic/group/" + subscribedGroupId, lastSubId));
                         }
 
                     } else if (frame.startsWith("MESSAGE")) {
@@ -136,11 +137,30 @@ public class WebSocketService {
 
     private int subCounter = 0; // unique sub id each time
 
+    //--- resubscribe--------------------------------------
+
+    private String lastSubId = null; // add this field at top of class
+
     public void resubscribe(Long groupId) {
         this.subscribedGroupId = groupId;
         if (wsClient == null || !wsClient.isOpen()) return;
+        
+        // Unsubscribe from previous subscription first
+        if (lastSubId != null) {
+            wsClient.send(stompUnsubscribe(lastSubId));
+        }
+        
         subCounter++;
-        wsClient.send(stompSubscribe("/topic/group/" + groupId, "sub-" + subCounter));
+        String newSubId = "sub-" + subCounter;
+        lastSubId = newSubId;
+        wsClient.send(stompSubscribe("/topic/group/" + groupId, newSubId));
+    }
+    
+    // ------unsibscribe -----------------------------------
+    private String stompUnsubscribe(String id) {
+        return "UNSUBSCRIBE\n" +
+               "id:" + id + "\n" +
+               "\n\0";
     }
 
     // ── STOMP frame builders ──────────────────────────────────────────────────

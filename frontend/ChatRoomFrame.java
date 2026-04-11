@@ -440,12 +440,19 @@ WebSocketService.getInstance().connect(token, null, rawJson ->
                     public void mouseEntered(MouseEvent e) { hovered = true;  repaint(); }
                     public void mouseExited(MouseEvent e)  { hovered = false; repaint(); }
                     public void mouseClicked(MouseEvent e) {
+                        loadGroups();
                         activeGroupId   = groupId;
                         activeGroupName = name;
                         activeGroupType = type;
                         chatHeaderName.setText(name);
                         chatHeaderStatus.setText(isDirect ? "Direct Message" : "Group");
                         chatHeaderStatus.setForeground(isDirect ? Theme.ACCENT_LIGHT : Theme.ONLINE);
+
+                        // Clear chat area immediately before async load
+                        chatArea.removeAll();
+                        chatArea.revalidate();
+                        chatArea.repaint();
+
                         loadMessages(groupId);
                         inputField.setEnabled(true);
                         sendBtn.setEnabled(true);
@@ -698,7 +705,10 @@ private void showNewChatDialog() {
 
                 SwingUtilities.invokeLater(() -> {
                     dialog.dispose();
-                    loadGroups();
+                    // Small delay to let backend persist before fetching
+                    javax.swing.Timer timer = new javax.swing.Timer(500, ev -> loadGroups());
+                    timer.setRepeats(false);
+                    timer.start();
                 });
             } catch (Exception ex) {
                 SwingUtilities.invokeLater(() -> {
