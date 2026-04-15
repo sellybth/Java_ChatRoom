@@ -34,7 +34,7 @@ public class SignUpFrame extends JDialog {
         main.setBorder(new EmptyBorder(40, 50, 40, 50));
 
         // Close button
-        JButton closeBtn = new JButton("×");
+        JButton closeBtn = new JButton("X");
         closeBtn.setFont(new Font("Arial", Font.PLAIN, 20));
         closeBtn.setForeground(new Color(150, 150, 170));
         closeBtn.setBackground(new Color(18, 18, 28));
@@ -144,7 +144,9 @@ String phone = phoneField.getText().trim();
 
 // Regex patterns
 String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
+//8 digits and alphanumeric
 String passwordRegex = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$"; 
+//10 digit phone number
 String phoneRegex = "^[0-9]{10}$";
 
 // Validation

@@ -35,7 +35,7 @@ public class AuthController {
                 .body(Map.of("error", "Email already registered"));
         }
 
-        // Hash the password before saving — NEVER store plain text
+        // Hash the password before saving , not store plain text
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         // Save to Neon DB
